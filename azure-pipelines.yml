@@ -1,0 +1,61 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+trigger:
+- cj
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: VSBuild@1
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: WebGoat
+    Contents: |
+     **\*.*
+     !(*.zip)
+    TargetFolder: '$(Build.BinariesDirectory)'
+
+
+- task: fortifyvsts.hpe-security-fortify-vsts.build-task-fortify-on-demand-static.FortifyOnDemandStatic@8
+  displayName: 'Run Fortify on Demand static assessment on $(Build.BinariesDirectory)'
+  inputs:
+    FortifyProjects: '$(Build.BinariesDirectory)'
+    FodConnection: 'Keno Tenant'
+    ReleaseOptions: 0
+    ReleaseId: 75693
+    EntitlementSelection: 0
+    Entitlement: 1844
+    EntitlementPreference: 0
+    OverrideScanSettings: 2
+    InProgressScanActionType: 2
+    RemediationScanPreference: 2
+    PollingInterval: 0
+    PolicyFailAction: 0
