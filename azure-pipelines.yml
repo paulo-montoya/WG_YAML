@@ -40,7 +40,7 @@ steps:
     FortifyProjects: WebGoat
     FodConnection: 'AMS_pjtest'
     ReleaseOptions: 0
-    ReleaseId: 754982
+    ReleaseId: 945671
     EntitlementSelection: 1
     EntitlementPreference: 1
     OverrideScanSettings: 2
